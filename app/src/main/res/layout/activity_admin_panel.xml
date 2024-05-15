@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/label1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Панель администратора:"
+        android:textSize="30sp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"/>
+
+    <TextView
+        android:id="@+id/labelFIO"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ФИО"
+        android:textSize="20sp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/buttonOpenEmployeesPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Работники"
+        android:textSize="20sp"
+        android:background="@drawable/button_rounded_blue"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/buttonOpenTasksPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Задачи"
+        android:textSize="20sp"
+        android:background="@drawable/button_rounded_blue"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/buttonOpenToolsPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Инструменты"
+        android:textSize="20sp"
+        android:background="@drawable/button_rounded_blue"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/buttonOpenAddressesPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Адреса"
+        android:textSize="20sp"
+        android:background="@drawable/button_rounded_blue"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/buttonOpenFeedbackPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Обращения"
+        android:textSize="20sp"
+        android:background="@drawable/button_rounded_blue"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"/>
+
+    <Button
+        android:id="@+id/buttonLogout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Выход"
+        android:textSize="20sp"
+        android:background="@drawable/button_rounded_blue"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"/>
+</LinearLayout>

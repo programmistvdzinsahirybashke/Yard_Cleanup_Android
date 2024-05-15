@@ -27,21 +27,6 @@
             android:layout_marginBottom="16dp"/>
 
         <TextView
-            android:id="@+id/textViewAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Адреса:"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="10dp"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewAddress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
             android:id="@+id/textViewTasks"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -50,26 +35,29 @@
             android:textStyle="bold"
             android:layout_marginBottom="10dp"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewTasks"
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="200dp" />
+
+
+        <Spinner
+            android:id="@+id/spinnerStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+
+        <Button
+            android:id="@+id/buttonSave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:id="@+id/textViewTools"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Инструменты:"
+            android:layout_gravity="left"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/button_rounded_blue"
+            android:text="Сохранить"
+            android:textColor="#FFF"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="10dp"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewTools"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/buttonLogout"
@@ -81,9 +69,6 @@
             android:textStyle="bold"
             android:background="@drawable/button_rounded_blue"
             android:layout_marginTop="20dp"
-
             android:layout_gravity="left"/>
-
     </LinearLayout>
-
 </ScrollView>
