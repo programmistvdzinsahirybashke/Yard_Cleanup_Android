@@ -1,6 +1,8 @@
 package com.example.myapplication;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -21,18 +23,22 @@ import java.sql.Statement;
 import android.widget.Spinner;
 import android.widget.Toast;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserMainWindow extends AppCompatActivity {
     private Spinner spinner;
     private Spinner spinnerStatus;
     private Button buttonSaveStatus;
+    private int selectedTaskID;
     private int userID;
-    private String url = "jdbc:postgresql://192.168.42.178:5432/cleanFINAL";
+    private List<String> data; // Переменная для хранения данных из базы данных
+    private String url = "jdbc:postgresql://192.168.57.178:5432/cleanFINAL";
     private String username = "postgres";
     private String datapassword = "123";
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,13 +46,11 @@ public class UserMainWindow extends AppCompatActivity {
         setContentView(R.layout.activity_user_main_window);
 
         spinner = findViewById(R.id.spinner);
-
         spinnerStatus = findViewById(R.id.spinnerStatus);
         buttonSaveStatus = findViewById(R.id.buttonSave);
 
         // Выполнение запроса к базе данных в фоновом потоке
         new FetchDataTask().execute();
-
         Button buttonLogout = findViewById(R.id.buttonLogout);
 
         buttonLogout.setOnClickListener(new View.OnClickListener() {
@@ -56,7 +60,6 @@ public class UserMainWindow extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
         // Получение ID пользователя
         userID = getUserID();
         if (userID != -1) {
@@ -64,22 +67,81 @@ public class UserMainWindow extends AppCompatActivity {
         }
         loadStatusesIntoSpinner();
 
-
-
-        spinnerStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        Button buttonSave = findViewById(R.id.buttonSave);
+        buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // Обработка выбора статуса задачи
-                String selectedStatus = parent.getItemAtPosition(position).toString();
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                // Обработка события, когда не выбрано ничего
+            public void onClick(View v) {
+                updateTaskStatusInDatabase(selectedTaskID, getStatusId(spinnerStatus.getSelectedItem().toString()));
             }
         });
     }
+
+    private int parseTaskID(String selectedItem) {
+        // Предполагаем, что номер задачи находится перед "Номер задачи: " и после первого пробела
+        int startIndex = selectedItem.indexOf("Номер задачи: "); // Длина "Номер задачи: "
+        int endIndex = selectedItem.indexOf("\n", startIndex); // Найдем конец номера
+        String taskIDString = selectedItem.substring(startIndex, endIndex);
+        // Преобразуем строку в целое число и возвращаем
+        return Integer.parseInt(taskIDString);
+    }
+
+
+    private void updateTaskStatusInDatabase(int taskId, int statusId) {
+        try {
+            Class.forName("org.postgresql.Driver");
+            Connection connection = DriverManager.getConnection(url, username, datapassword);
+            String query = "UPDATE Задачи_сотрудников SET статус = ? WHERE задача_id = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, statusId);
+            statement.setInt(2, taskId);
+            int rowsUpdated = statement.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                // Если обновление прошло успешно, показываем сообщение об успехе
+                Toast.makeText(UserMainWindow.this, "Статус задачи успешно обновлен", Toast.LENGTH_SHORT).show();
+            } else {
+                // Если ни одна строка не была обновлена, показываем сообщение об ошибке
+                Toast.makeText(UserMainWindow.this, "Ошибка при обновлении статуса задачи = " + selectedTaskID + statusId , Toast.LENGTH_SHORT).show();
+            }
+
+            // Закрываем ресурсы
+            statement.close();
+            connection.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            // В случае возникновения ошибки показываем сообщение об ошибке
+            Toast.makeText(UserMainWindow.this, "Произошла ошибка", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private int getStatusId(String statusName) {
+        Connection connection = null;
+        try {
+            Class.forName("org.postgresql.Driver");
+            connection = DriverManager.getConnection(url, username, datapassword);
+            String query = "SELECT статус_id FROM Статусы_задач WHERE название = ?";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setString(1, statusName);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("статус_id");
+            } else {
+                return 0; // Возвращаем 0, если статус не найден
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0; // Обработка ошибки
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     private void loadStatusesIntoSpinner() {
         new Thread(new Runnable() {
             @Override
@@ -123,13 +185,10 @@ public class UserMainWindow extends AppCompatActivity {
 
         @Override
         protected List<String> doInBackground(Void... voids) {
-            List<String> data = new ArrayList<>();
-            String connectionUrl = "jdbc:postgresql://192.168.42.178:5432/cleanFINAL";
-            String username = "postgres";
-            String password = "123";
-            userID = getUserID(); // замените это на реальный идентификатор пользователя
+            data = new ArrayList<>(); // Инициализируем список данных
 
-            try (Connection connection = DriverManager.getConnection(connectionUrl, username, password)) {
+            userID = getUserID(); // замените это на реальный идентификатор пользователя
+            try (Connection connection = DriverManager.getConnection(url, username, datapassword)) {
                 String query = "SELECT задача_id, Города.название, Улицы.название as название_улицы, Улицы.номер, Типы_работ.название as название_типа, " +
                         "Задачи_сотрудников.описание, Статусы_задач.название as название_статуса, TO_CHAR(дата_выдачи, 'YYYY-MM-DD HH24:MI:SS') as дата_выдачи, " +
                         "TO_CHAR(дата_завершения, 'YYYY-MM-DD HH24:MI:SS') as дата_завершения, фото " +
@@ -185,6 +244,32 @@ public class UserMainWindow extends AppCompatActivity {
             spinner.setAdapter(spinnerAdapter);
             // Создайте кастомный адаптер для выпадающего списка
             CustomDropdownAdapter dropdownAdapter = new CustomDropdownAdapter(UserMainWindow.this, android.R.layout.simple_spinner_dropdown_item, data);
+
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                    String selectedItem = data.get(position);
+
+                    // Ищем номер задачи в строке с помощью регулярного выражения
+                    Pattern pattern = Pattern.compile("\\d+"); // Ищем все последовательности цифр
+                    Matcher matcher = pattern.matcher(selectedItem);
+
+                    if (matcher.find()) {
+                        // Извлекаем найденное число
+                        String taskID = matcher.group();
+
+                        // Преобразуем идентификатор задачи в int и сохраняем его в переменную
+                        selectedTaskID = Integer.parseInt(taskID);
+                    } else {
+                        // Если номер задачи не найден, обработайте эту ситуацию по вашему усмотрению
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+                    // Обработка, если ничего не выбрано
+                }
+            });
         }
     }
 

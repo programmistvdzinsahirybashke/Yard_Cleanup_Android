@@ -15,7 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class MainActivity extends Activity {
-    private String connection = "jdbc:postgresql://192.168.42.178:5432/cleanFINAL";
+    private String connection = "jdbc:postgresql://192.168.57.178:5432/cleanFINAL";
     private EditText editTextLogin;
     private EditText editTextPassword;
 
@@ -96,7 +96,6 @@ public class MainActivity extends Activity {
             }
         }).start();
     }
-
     private void showToast(final String message) {
         runOnUiThread(new Runnable() {
             @Override
