@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -41,11 +42,28 @@
             android:layout_height="200dp" />
 
 
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="375dp"
+            android:layout_height="300dp"
+            app:srcCompat="@drawable/button_rounded_blue" />
+
         <Spinner
             android:id="@+id/spinnerStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <Button
+            android:id="@+id/buttonImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/button_rounded_blue"
+            android:text="Выбрать фото"
+            android:textColor="#FFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/buttonSave"
@@ -58,6 +76,7 @@
             android:textColor="#FFF"
             android:textSize="20sp"
             android:textStyle="bold" />
+
 
         <Button
             android:id="@+id/buttonLogout"

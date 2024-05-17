@@ -4,14 +4,25 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,10 +44,13 @@ public class UserMainWindow extends AppCompatActivity {
     private Spinner spinner;
     private Spinner spinnerStatus;
     private Button buttonSaveStatus;
+    private static final int PICK_IMAGE_REQUEST = 1;
     private int selectedTaskID;
     private int userID;
-    private List<String> data; // Переменная для хранения данных из базы данных
-    private String url = "jdbc:postgresql://192.168.57.178:5432/cleanFINAL";
+    private List<String> data;
+    private ActivityResultLauncher<String> requestPermissionLauncher;
+    private ImageView imageView;
+    private String url = "jdbc:postgresql://192.168.42.178:5432/cleanFINAL";
     private String username = "postgres";
     private String datapassword = "123";
 
@@ -48,6 +62,19 @@ public class UserMainWindow extends AppCompatActivity {
         spinner = findViewById(R.id.spinner);
         spinnerStatus = findViewById(R.id.spinnerStatus);
         buttonSaveStatus = findViewById(R.id.buttonSave);
+        imageView = findViewById(R.id.imageView);
+
+        requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+            if (isGranted) {
+                openGallery();
+            } else {
+                // Обработка отказа в разрешении
+            }
+        });
+
+        Button buttonOpenGallery = findViewById(R.id.buttonImage);
+        buttonOpenGallery.setOnClickListener(v -> openGallery());
+
 
         // Выполнение запроса к базе данных в фоновом потоке
         new FetchDataTask().execute();
@@ -72,6 +99,8 @@ public class UserMainWindow extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 updateTaskStatusInDatabase(selectedTaskID, getStatusId(spinnerStatus.getSelectedItem().toString()));
+                new FetchDataTask().execute();
+
             }
         });
     }
@@ -88,12 +117,26 @@ public class UserMainWindow extends AppCompatActivity {
 
     private void updateTaskStatusInDatabase(int taskId, int statusId) {
         try {
+
             Class.forName("org.postgresql.Driver");
             Connection connection = DriverManager.getConnection(url, username, datapassword);
-            String query = "UPDATE Задачи_сотрудников SET статус = ? WHERE задача_id = ?";
+
+            // Преобразование изображения из ImageView в байты
+            imageView.setDrawingCacheEnabled(true);
+            imageView.buildDrawingCache();
+            Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+            byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+            // Обновление статуса задачи и фото
+            String query = "UPDATE Задачи_сотрудников SET статус = ?, фото = ? WHERE задача_id = ?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, statusId);
-            statement.setInt(2, taskId);
+            statement.setBytes(2, imageBytes);
+            statement.setInt(3, taskId);
+
+
             int rowsUpdated = statement.executeUpdate();
 
             if (rowsUpdated > 0) {
@@ -113,13 +156,36 @@ public class UserMainWindow extends AppCompatActivity {
             Toast.makeText(UserMainWindow.this, "Произошла ошибка", Toast.LENGTH_SHORT).show();
         }
     }
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                // Установить изображение в ImageView
+                imageView.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
 
     private int getStatusId(String statusName) {
         Connection connection = null;
         try {
             Class.forName("org.postgresql.Driver");
             connection = DriverManager.getConnection(url, username, datapassword);
-            String query = "SELECT статус_id FROM Статусы_задач WHERE название = ?";
+            String query = "SELECT статус_id FROM Статусы_задач WHERE название =?";
             PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, statusName);
             ResultSet resultSet = statement.executeQuery();
@@ -151,7 +217,7 @@ public class UserMainWindow extends AppCompatActivity {
                 try {
                     Class.forName("org.postgresql.Driver");
                     connection = DriverManager.getConnection(url, username, datapassword);
-                    String query = "SELECT название FROM Статусы_задач";
+                    String query = "SELECT название FROM Статусы_задач where название = 'На проверке' OR название = 'Выдана'";
                     PreparedStatement statement = connection.prepareStatement(query);
                     ResultSet resultSet = statement.executeQuery();
                     while (resultSet.next()) {
